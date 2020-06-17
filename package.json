@@ -1,0 +1,10 @@
+{
+  "name": "sound-of-movement",
+  "description": "The Sound of Movement",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "express": "^4.17.1"
+  }
+}
