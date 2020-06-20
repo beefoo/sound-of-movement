@@ -78,6 +78,10 @@ video {
   color: white;
   display: none;
 }
+.highlighter.top .label {
+  top: auto;
+  bottom: 12vmin;
+}
 .highlighter .label p {
   white-space: nowrap;
   margin: 0;
