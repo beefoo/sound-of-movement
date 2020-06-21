@@ -12,7 +12,7 @@ h1 {
   line-height: 1;
 }
 h1 + h2 {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   margin-top: 0;
 }
 a {
@@ -47,7 +47,7 @@ video {
   background: rgba(0,0,0,0.8);
   line-height: 56.25vw;
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 4vmin;
   border: none;
   color: white;
   cursor: pointer;
@@ -73,7 +73,9 @@ video {
   top: 0;
   left: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.8);
+  border: 1px solid white;
+  box-sizing: border-box;
+  box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.667);
 }
 .highlighter .label {
   position: absolute;

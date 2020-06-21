@@ -131,20 +131,21 @@ var MainApp = (function() {
         _this.listening = true;
         _this.pointerX = e.center.x;
         _this.pointerY = e.center.y;
+        // console.log(_this.pointerX, _this.pointerY);
       }
     });
 
-    // // listen for mouse events
+    // listen for mouse events
     // var $doc = $(document);
     // var mousedown = false;
     // $doc.on("mousedown", function(e){
-    //   if (touching || e.target.id !== "highlighter") return;
+    //   if (touching || e.target.id !== "viz" && e.target.id !== "highlighter" && e.target.id !== "circle" && e.target.id !== "label") return;
     //   console.log("Mouse down.");
     //   e.preventDefault();
     //   mousedown = true;
     // });
     // $doc.on("mouseup", function(e){
-    //   if (touching) return;
+    //   if (touching || !mousedown) return;
     //   console.log("Mouse up.");
     //   mousedown = false;
     //   _this.listening = false;
@@ -155,7 +156,6 @@ var MainApp = (function() {
     //   if (_this.listening) {
     //     _this.pointerX = e.pageX;
     //     _this.pointerY = e.pageY;
-    //     console.log(e.pageX, e.pageY)
     //   }
     // });
   };
@@ -219,8 +219,9 @@ var MainApp = (function() {
 
   MainApp.prototype.onScroll = function(){
     var bbox = this.$viz[0].getBoundingClientRect();
-    this.offsetY = bbox.y;
-    this.offsetX = bbox.x;
+    // console.log(bbox);
+    this.offsetY = bbox.top;
+    this.offsetX = bbox.left;
   };
 
   MainApp.prototype.play = function(x, y){
@@ -263,20 +264,24 @@ var MainApp = (function() {
     var fadeInMs = this.opt.fadeInMs;
 
     if (filenames === false) {
+      console.log("No audio to queue");
       if (this.audio !== false) {
-        this.audio.fade(this.audio.volume(), 0, fadeInMs);
+        // this.audio.fade(this.audio.volume(), 0, fadeInMs);
+        this.audio.unload();
+        this.audio = false;
       }
+      this.queueFile = false;
       return;
     }
 
     var filename = filenames[0];
+    console.log("Queue "+filename);
     this.queueFile = filename;
     var sound = new Howl({
       src: filenames,
       loop: true,
       volume: 0
     });
-
 
     var fadePromise = $.Deferred();
     setTimeout(function(){
@@ -287,6 +292,9 @@ var MainApp = (function() {
     sound.on('load', function(){
       loadPromise.resolve();
     });
+    sound.on('loaderror', function(){
+      console.log('Load error: '+filename)
+    });
 
     // fade out audio
     if (this.audio !== false) {
@@ -296,6 +304,7 @@ var MainApp = (function() {
     $.when(fadePromise, loadPromise).done(function(){
       // check to see if this is stale
       if (_this.queueFile !== filename) {
+        console.log("Stale queue");
         sound.unload();
         return false;
       }
@@ -307,7 +316,7 @@ var MainApp = (function() {
       console.log('Playing '+filename);
       _this.audio = sound;
       _this.audio.play();
-      _this.audio.fade(0, 1, fadeInMs);
+      _this.audio.fade(0, 0.5, fadeInMs);
 
       if (_this.audioViz === false) {
         _this.loadAudioViz();
