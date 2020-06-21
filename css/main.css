@@ -94,3 +94,10 @@ video {
 .viz.active .highlighter .label {
   display: block;
 }
+
+.mute {
+  display: none;
+}
+.mute.active {
+  display: block;
+}

@@ -18,7 +18,10 @@ function isInside(point, points) {
 var MainApp = (function() {
 
   function MainApp(config) {
-    var defaults = {};
+    var defaults = {
+      'fadeInMs': 500,
+      'videoVolume': 0.1
+    };
     this.opt = $.extend({}, defaults, config);
     this.init();
   }
@@ -31,6 +34,7 @@ var MainApp = (function() {
     this.$video = $('#video');
     this.video = this.$video[0];
 
+    this.audio = false;
     this.lastX = false;
     this.lastY = false;
     this.vizWidth = false;
@@ -79,6 +83,10 @@ var MainApp = (function() {
         _this.start();
         started = true;
       }
+    });
+
+    $('.mute').on('click', function(){
+      _this.mute($(this));
     });
 
     this.listening = false;
@@ -150,6 +158,18 @@ var MainApp = (function() {
     else this.$highlighter.removeClass('top');
   };
 
+  MainApp.prototype.mute = function($el){
+    $el.toggleClass('muted');
+    var muted = $el.hasClass('muted');
+    this.video.muted = muted;
+    Howler.mute(muted);
+    if (muted) {
+      $el.text('Unmute volume');
+    } else {
+      $el.text('Mute volume');
+    }
+  };
+
   MainApp.prototype.onResize = function(){
     var _this = this;
     var states = this.states;
@@ -218,7 +238,46 @@ var MainApp = (function() {
   };
 
   MainApp.prototype.queueAudio = function(filename) {
+    var _this = this;
+    this.queueFile = filename;
+    var sound = new Howl({
+      src: [filename],
+      loop: true,
+      volume: 0
+    });
 
+    var fadeInMs = this.opt.fadeInMs;
+    var fadePromise = $.Deferred();
+    setTimeout(function(){
+      fadePromise.resolve();
+    }, fadeInMs);
+
+    var loadPromise = $.Deferred();
+    sound.on('load', function(){
+      loadPromise.resolve();
+    });
+
+    // fade out audio
+    if (this.audio !== false) {
+      this.audio.fade(this.audio.volume(), 0, fadeInMs);
+    }
+
+    $.when(fadePromise, loadPromise).done(function(){
+      // check to see if this is stale
+      if (_this.queueFile !== filename) {
+        sound.unload();
+        return false;
+      }
+      // unload current
+      if (_this.audio !== false) {
+        _this.audio.unload();
+      }
+      // fade in new
+      console.log('Playing '+filename);
+      _this.audio = sound;
+      _this.audio.play();
+      _this.audio.fade(0, 1, fadeInMs);
+    });
   };
 
   MainApp.prototype.render = function(){
@@ -236,11 +295,26 @@ var MainApp = (function() {
       }
     }
 
+    if (!this.fadedInVideo) {
+      var now = new Date().getTime();
+      var delta = now - this.startTime;
+      var fadeAmount = delta / this.opt.fadeInMs;
+      if (fadeAmount >= 1) this.fadedInVideo = true;
+      fadeAmount = Math.min(fadeAmount, 1);
+      fadeAmount = Math.max(fadeAmount, 0);
+      this.video.volume = fadeAmount * this.opt.videoVolume;
+    }
+
     requestAnimationFrame(function(){ _this.render(); });
   };
 
   MainApp.prototype.start = function(){
     this.$viz.addClass('active');
+    $('.mute').addClass('active');
+    this.video.muted = false;
+    this.video.volume = 0;
+    this.fadedInVideo = false;
+    this.startTime = new Date().getTime();
     this.render();
   };
 
