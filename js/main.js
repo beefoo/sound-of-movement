@@ -265,6 +265,7 @@ var MainApp = (function() {
 
     if (filenames === false) {
       console.log("No audio to queue");
+      this.$highlighter.removeClass("loading");
       if (this.audio !== false) {
         // this.audio.fade(this.audio.volume(), 0, fadeInMs);
         this.audio.unload();
@@ -274,6 +275,7 @@ var MainApp = (function() {
       return;
     }
 
+    this.$highlighter.addClass("loading");
     var filename = filenames[0];
     console.log("Queue "+filename);
     this.queueFile = filename;
@@ -317,6 +319,8 @@ var MainApp = (function() {
       _this.audio = sound;
       _this.audio.play();
       _this.audio.fade(0, 0.5, fadeInMs);
+
+      _this.$highlighter.removeClass("loading");
 
       if (_this.audioViz === false) {
         _this.loadAudioViz();
