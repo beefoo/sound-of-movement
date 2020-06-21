@@ -30,6 +30,7 @@ var MainApp = (function() {
     var _this = this;
     this.$viz = $('#viz');
     this.$highlighter = $('#highlighter');
+    this.$circle = $('#circle');
     this.$label = $('#label');
     this.$video = $('#video');
     this.video = this.$video[0];
@@ -40,6 +41,7 @@ var MainApp = (function() {
     this.vizWidth = false;
     this.vizHeight = false;
     this.lastState = false;
+    this.audioViz = false;
 
     _this.onScroll();
 
@@ -52,6 +54,24 @@ var MainApp = (function() {
       _this.onResize();
       _this.loadListeners();
     });
+  };
+
+  MainApp.prototype.loadAudioViz = function(){
+    if (!Howler.ctx) return;
+
+    var context = Howler.ctx;
+
+    // Create an analyser node in the Howler WebAudio context
+    var analyser = context.createAnalyser();
+    // Connect the masterGain -> analyser (disconnecting masterGain -> destination)
+    Howler.masterGain.connect(analyser);
+    // Connect the analyser -> destination
+    analyser.connect(context.destination);
+    analyser.fftSize = 256;
+    var bufferLength = analyser.frequencyBinCount;
+
+    this.soundArray = new Uint8Array(bufferLength);
+    this.audioViz = analyser;
   };
 
   MainApp.prototype.loadData = function(){
@@ -71,6 +91,7 @@ var MainApp = (function() {
 
     $(window).resize(function(){
       _this.onResize();
+      _this.onScroll();
     });
 
     $(window).scroll(function(){
@@ -164,9 +185,9 @@ var MainApp = (function() {
     this.video.muted = muted;
     Howler.mute(muted);
     if (muted) {
-      $el.text('Unmute volume');
+      $el.text('🕨 Unmute volume');
     } else {
-      $el.text('Mute volume');
+      $el.text('🕪 Mute volume');
     }
   };
 
@@ -234,19 +255,29 @@ var MainApp = (function() {
 
     this.lastState = found.state;
     this.$label.html('<p>'+found.city+', '+found.state+'</p><p>'+found.date+'</p>');
-    this.queueAudio('audio/'+found.state+'.mp3');
+    this.queueAudio(['audio/'+found.state+'.webm', 'audio/'+found.state+'.mp3']);
   };
 
-  MainApp.prototype.queueAudio = function(filename) {
+  MainApp.prototype.queueAudio = function(filenames) {
     var _this = this;
+    var fadeInMs = this.opt.fadeInMs;
+
+    if (filenames === false) {
+      if (this.audio !== false) {
+        this.audio.fade(this.audio.volume(), 0, fadeInMs);
+      }
+      return;
+    }
+
+    var filename = filenames[0];
     this.queueFile = filename;
     var sound = new Howl({
-      src: [filename],
+      src: filenames,
       loop: true,
       volume: 0
     });
 
-    var fadeInMs = this.opt.fadeInMs;
+
     var fadePromise = $.Deferred();
     setTimeout(function(){
       fadePromise.resolve();
@@ -277,6 +308,10 @@ var MainApp = (function() {
       _this.audio = sound;
       _this.audio.play();
       _this.audio.fade(0, 1, fadeInMs);
+
+      if (_this.audioViz === false) {
+        _this.loadAudioViz();
+      }
     });
   };
 
@@ -305,7 +340,20 @@ var MainApp = (function() {
       this.video.volume = fadeAmount * this.opt.videoVolume;
     }
 
+    if (this.audioViz !== false) {
+      this.renderAudioViz();
+    }
+
     requestAnimationFrame(function(){ _this.render(); });
+  };
+
+  MainApp.prototype.renderAudioViz = function(){
+    var analyser = this.audioViz;
+    var soundArray = this.soundArray;
+
+    analyser.getByteFrequencyData(soundArray);
+    var scale = 1.0 + (soundArray[2] - 96.0) / 255.0;
+    this.$circle.css('transform', 'scale3d('+scale+', '+scale+', '+scale+')');
   };
 
   MainApp.prototype.start = function(){

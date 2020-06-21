@@ -59,14 +59,21 @@ video {
   position: absolute;
   width: 10vmin;
   height: 10vmin;
-  border-radius: 50%;
   top: 0;
   left: 0;
-  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.8);
   box-sizing: border-box;
   transform: translate3d(50vw, 28.125vw, 0);
   margin-left: -5vmin;
   margin-top: -5vmin;
+}
+.highlighter .circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.8);
 }
 .highlighter .label {
   position: absolute;
@@ -97,6 +104,11 @@ video {
 
 .mute {
   display: none;
+  margin-top: -1rem;
+  border: 2px solid white;
+  background: black;
+  color: white;
+  padding: 0.5rem 1rem;
 }
 .mute.active {
   display: block;
