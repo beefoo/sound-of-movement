@@ -32,8 +32,9 @@ var MainApp = (function() {
     this.$highlighter = $('#highlighter');
     this.$circle = $('#circle');
     this.$label = $('#label');
-    this.$video = $('#video');
-    this.video = this.$video[0];
+
+    var $videoIframe = $('#video');
+    this.player = new Vimeo.Player($videoIframe[0]);
 
     this.audio = false;
     this.lastX = false;
@@ -110,6 +111,14 @@ var MainApp = (function() {
       _this.mute($(this));
     });
 
+    this.player.on('pause', function(){
+      _this.pause(true);
+    });
+
+    this.player.on('play', function(){
+      _this.pause(false);
+    });
+
     this.listening = false;
     var touching = false;
     var touchHandler = new Hammer(this.$viz[0]);
@@ -162,10 +171,19 @@ var MainApp = (function() {
 
   MainApp.prototype.loadVideo = function(){
     var promise = $.Deferred();
+    var _this = this;
 
-    this.video.addEventListener('loadeddata', function() {
-       promise.resolve();
-    }, false);
+    this.player.ready().then(function() {
+      _this.player.setVolume(0);
+      _this.player.setLoop(true).then(function(loop) {
+        _this.player.play();
+        promise.resolve();
+      });
+    });
+
+    // this.video.addEventListener('loadeddata', function() {
+    //    promise.resolve();
+    // }, false);
 
     return promise;
   };
@@ -182,8 +200,12 @@ var MainApp = (function() {
   MainApp.prototype.mute = function($el){
     $el.toggleClass('muted');
     var muted = $el.hasClass('muted');
-    this.video.muted = muted;
+
+    if (muted) this.player.setVolume(0);
+    else this.player.setVolume(this.opt.videoVolume);
+    // this.video.muted = muted;
     Howler.mute(muted);
+
     if (muted) {
       $el.text('🕨 Unmute volume');
     } else {
@@ -257,6 +279,10 @@ var MainApp = (function() {
     this.lastState = found.state;
     this.$label.html('<p>'+found.city+', '+found.state+'</p><p>'+found.date+'</p>');
     this.queueAudio(['audio/'+found.state+'.webm', 'audio/'+found.state+'.mp3']);
+  };
+
+  MainApp.prototype.pause = function(isPaused){
+    Howler.mute(isPaused);
   };
 
   MainApp.prototype.queueAudio = function(filenames) {
@@ -350,7 +376,8 @@ var MainApp = (function() {
       if (fadeAmount >= 1) this.fadedInVideo = true;
       fadeAmount = Math.min(fadeAmount, 1);
       fadeAmount = Math.max(fadeAmount, 0);
-      this.video.volume = fadeAmount * this.opt.videoVolume;
+      this.player.setVolume(fadeAmount * this.opt.videoVolume);
+      // this.video.volume = fadeAmount * this.opt.videoVolume;
     }
 
     if (this.audioViz !== false) {
@@ -372,8 +399,9 @@ var MainApp = (function() {
   MainApp.prototype.start = function(){
     this.$viz.addClass('active');
     $('.mute').addClass('active');
-    this.video.muted = false;
-    this.video.volume = 0;
+    // this.video.muted = false;
+    // this.video.volume = 0;
+    this.player.setVolume(0);
     this.fadedInVideo = false;
     this.startTime = new Date().getTime();
     this.render();

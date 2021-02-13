@@ -23,16 +23,19 @@
       sparked protests across the United States and worldwide. This page immerses you in the sounds of 50 of those protests in the
       50 states of the U.S. during the first weeks of the protests.
     </p>
+    <p class="notice">Due to the large video files, a good internet connection and large screen is recommended for this experiment.</p>
   </div>
 
   <div id="viz" class="viz">
     <button class="start-button">Click &amp; drag circle start</button>
     <div class="wrapper">
-      <video id="video" loop muted autoplay>
+      <!-- <video id="video" loop muted autoplay>
         <source src="video/floyd_viz.webm" type="video/webm">
         <source src="video/floyd_viz.mp4" type="video/mp4">
         Sorry, your browser doesn't support embedded videos.
-      </video>
+      </video> -->
+      <iframe id="video" src="https://player.vimeo.com/video/511826952" frameborder="0" allow="autoplay"></iframe>
+      <div class="overlay"></div>
       <div id="highlighter" class="highlighter">
         <div id="circle" class="circle"></div>
         <div id="label" class="label">
@@ -107,6 +110,7 @@
     </p>
   </div>
 
+  <script src="https://player.vimeo.com/api/player.js"></script>
   <script src="js/vendor/jquery-3.5.1.min.js"></script>
   <script src="js/vendor/howler.min.js"></script>
   <script src="js/vendor/hammer.min.js"></script>
